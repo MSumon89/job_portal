@@ -4,6 +4,7 @@ from .forms import JobForm, ApplicationForm
 from django.contrib import messages
 from jobs.models import Job, Application
 from django.db.models import Q
+from django.http import JsonResponse
 
 @login_required
 def post_job(request):
@@ -130,3 +131,21 @@ def cancel_application(request, application_id):
     
     # Redirect back to the Applicant Dashboard
     return redirect('applicant_dashboard')
+
+@login_required
+def manage_applications(request, job_id):
+    job = get_object_or_404(Job, id=job_id, posted_by=request.user)
+    applications = Application.objects.filter(job=job)
+
+    if request.method == "POST":
+        application_id = request.POST.get("application_id")
+        new_status = request.POST.get("status")
+        application = get_object_or_404(Application, id=application_id, job=job)
+        application.status = new_status
+        application.save()
+        return JsonResponse({"success": True, "status": application.status})
+
+    return render(request, "jobs/manage_applications.html", {
+        "job": job,
+        "applications": applications,
+    })

@@ -19,6 +19,11 @@ class Application(models.Model):
     resume = models.FileField(upload_to='resumes/')
     cover_letter = models.TextField()
     applied_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=10,
+        choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')],
+        default='Pending'
+    )
 
     def __str__(self):
         return f"{self.applicant.username} applied for {self.job.title}"

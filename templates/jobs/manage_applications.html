@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Manage Applications for {{ job.title }}</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Applicant Name</th>
+            <th>Resume</th>
+            <th>Cover Letter</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for application in applications %}
+        <tr>
+            <td>{{ application.applicant.username }}</td>
+            <td><a href="{{ application.resume.url }}" download>Download Resume</a></td>
+            <td>{{ application.cover_letter }}</td>
+            <td>
+                <span class="status {% if application.status == 'Approved' %}approved{% elif application.status == 'Rejected' %}rejected{% else %}pending{% endif %}">
+                    {{ application.status }}
+                </span>
+            </td>
+            <td>
+                <form method="POST" class="status-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="application_id" value="{{ application.id }}">
+                    <button type="submit" name="status" value="Approved">Approve</button>
+                    <button type="submit" name="status" value="Rejected">Reject</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<style>
+    .status.approved {
+        color: green;
+    }
+    .status.rejected {
+        color: red;
+    }
+    .status.pending {
+        color: gray;
+    }
+</style>
+
+<script>
+    document.querySelectorAll('.status-form').forEach(form => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            }
+        });
+    });
+</script>
+{% endblock %}
